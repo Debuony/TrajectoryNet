@@ -380,7 +380,20 @@ def main(args):
     # print(losses)
     # eval_utils.generate_samples(device, args, model, growth_model, timepoint=args.timepoints[-1])
     # eval_utils.calculate_path_length(device, args, model, data, args.int_tps[-1])
-
+     # Select evaluation metric based on the argument
+    if args.eval_metric == "mse":
+        losses = eval_utils.evaluate_mse(device, args, model)
+        print("MSE results:", losses)
+        np.save(os.path.join(args.save, "mse_results.npy"), losses)
+    elif args.eval_metric == "emd":
+        losses = eval_utils.evaluate_kantorovich(device, args, model, n=args.n_samples)
+        print("EMD results:", losses)
+        np.save(os.path.join(args.save, "emd_results.npy"), losses)
+    elif args.eval_metric == "path_length":
+        eval_utils.calculate_path_length(device, args, model, data, args.int_tps[-1], n_pts=args.n_samples)
+        print("Path length calculation complete.")
+    else:
+        print("No valid evaluation metric specified. Exiting.")
 
 if __name__ == "__main__":
     args = parser.parse_args()
