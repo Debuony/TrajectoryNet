@@ -117,3 +117,8 @@ parser.add_argument(
 )
 parser.add_argument("--whiten", action="store_true", help="Whiten data before running TrajectoryNet")
 parser.add_argument("--save_movie", action="store_false", help="Construct trajectory movie, requires ffmpeg to be installed")
+
+parser.add_argument("--eval_metric", type=str, choices=["mse", "emd", "path_length"], help="Specify the evaluation metric.")
+parser.add_argument("--n_samples", type=int, default=10000, help="Number of samples for evaluation.")
+parser.add_argument("--end_time", type=float, default=None, help="End time for path length calculation.")
+parser.add_argument("--eval_timepoint", type=int, default=None, help="Timepoint for EMD evaluation.")
