@@ -46,6 +46,68 @@ timepoints = np.unique(labels)
 dfs = [data[labels == tp] for tp in timepoints]
 
 
+    for a_ind, b_ind in pairs:
+        start = time.time()
+        print(f"Processing pair: {a_ind} -> {b_ind}")
+        
+        a, b = dfs[a_ind], dfs[b_ind]
+        t_pseudo_a, t_pseudo_b = pseudotime[a_ind], pseudotime[b_ind]
+        
+        m, n = a.shape[0], b.shape[0]
+        
+        # Pairwise gene expression distances (Euclidean)
+        M_gene = cdist(a, b) 
+        
+        # Construct cost matrix
+        # Developmental gradient regularization with pseudotime penalty
+        M = np.zeros_like(M_gene)
+        gradient_terms = []  # Store gradient terms for debugging
+
+        for i in range(m):
+            row_terms = []
+            for j in range(n):
+                # Original gradient term
+                gradient_term = lambda_grad * alpha * np.log(1 + beta * t_pseudo_a[i])
+                
+                # Pseudotime penalty term
+                pseudotime_penalty = lambda_pseudo * abs(t_pseudo_b[j] - t_pseudo_a[i])
+                
+                # Combine the terms
+                M[i, j] = M_gene[i, j] + gradient_term + pseudotime_penalty
+                row_terms.append(gradient_term + pseudotime_penalty)
+            
+            gradient_terms.append(row_terms)
+        
+        # Print the gradient terms
+        print(f"Gradient terms for pair {a_ind} -> {b_ind}:")
+        print(np.array(gradient_terms))
+
+        # Sinkhorn unbalanced parameters - taken from OG code
+        entropy_reg = 0.1
+        reg_1, reg_2 = alpha, 10000
+        
+        # Compute transport plan
+        gamma = sinkhorn_knopp_unbalanced(
+            np.ones(m) / m,  
+            np.ones(n) / n,  
+            M,               
+            entropy_reg,     
+            reg_1,           
+            reg_2            
+        )
+        
+        gc = get_growth_coeffs(gamma, np.ones(m) / m)
+        gcs.append(gc)
+        
+        end = time.time()
+        print(f"Pair {a_ind} to {b_ind} took {end - start:.2f} seconds")
+    
+    # Print final growth coefficients
+    print("All growth coefficients computed:", gcs)
+    
+    return gcs
+
+'''
 def get_all_growth_coeffs(alpha):
     gcs = []
     for i in range(len(dfs) - 1):
@@ -64,7 +126,7 @@ def get_all_growth_coeffs(alpha):
 
 gcs = np.load("gcs.npy")
 print(gcs)
-
+'''
 
 class GrowthNet(torch.nn.Module):
     def __init__(self):
