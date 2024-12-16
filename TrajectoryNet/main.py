@@ -216,6 +216,8 @@ def compute_loss(device, args, model, growth_model, logger, full_data):
         losses += density_loss * args.top_k_reg
     losses += interp_loss
     return losses
+
+'''
 def train(
     device, args, model, growth_model, regularization_coeffs, regularization_fns, logger
 ):
@@ -449,7 +451,7 @@ def train(
             )
         end = time.time()
     logger.info("Training has finished.")
-'''
+
 
 def train_eval(device, args, model, growth_model, itr, best_loss, logger, full_data):
     model.eval()
